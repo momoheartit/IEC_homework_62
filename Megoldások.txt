@@ -1,0 +1,86 @@
+1, Melyik volt az utolsó 3 projekt, amin a 25-ös partnerrel együtt dolgoztunk?
+	SELECT * FROM db__income
+   	-> WHERE partner = 25
+    	-> ORDER BY created
+    	-> DESC LIMIT 3;
+=== VAGY === 
+	SELECT project FROM db__income
+   	-> WHERE partner = 25
+    	-> ORDER BY created
+    	-> DESC LIMIT 3;
+
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+2, Hány projektünk volt 2020-ban, amit a 2-es partner számára kiviteleztünk?
+	SELECT COUNT(*) AS num_projects
+    	-> FROM db__income
+    	-> WHERE partner = 2 AND YEAR(created) = 2020;
+
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+3, Melyik volt a 10 legnagyobb bevételt hozó projekt? (lássuk a partner nevét, az összeget és a projektet)
+	SELECT p.name AS partner_name, d.amount, d.project
+    	-> FROM db__income d
+    	-> JOIN db__partners p ON d.partner = p.id
+    	-> ORDER BY d.amount DESC
+    	-> LIMIT 10;
+
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+4, Melyek az aktuális kintlévőségek? (azok a sorok, ahol az "approved" még NULL értékű)
+	SELECT * FROM db__income WHERE approved IS NULL;
+
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+5, Mennyi a teljes kintlévőség? (az "amount" összege a kintlévőségeknél)
+	SELECT SUM(amount) AS total_outstanding
+ 	-> FROM db__income
+  	-> WHERE approved IS NULL;
+
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+6, Melyek a 2022 eleje óta létrejött kifizetett "java" projektek? (ahol az "approved" nem üres és a "project" arra végződik, hogy "java")
+	SELECT * FROM db__income
+    	-> WHERE approved IS NOT NULL
+    	-> AND project LIKE '%java'
+    	-> AND created >= '2022-01-01';
+
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+7, Melyik partner mennyi feladattal bízott meg minket a 2022-es évben? (partner neve és projektek száma)
+	SELECT p.name AS partner_name, COUNT(*) AS num_projects
+    	-> FROM db__income d
+    	-> JOIN db__partners p ON d.partner = p.id
+    	-> WHERE YEAR(d.created) = 2022
+    	-> GROUP BY p.name;
+
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+8, Melyek azok a 2022 előtti projektek, amelyeknél szervert állítottunk be? (arra végződik, hogy " server" - az "observer"-re végződőek nem ilyenek)
+	SELECT *
+    	-> FROM db__income
+    	-> WHERE YEAR(created) < 2022
+    	-> AND project LIKE '% server'
+    	-> AND project NOT LIKE '% observer';
+
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+9, értesítenünk kell az illetékeseket: lássuk a kapcsolódó partner elérhetőségét
+	SELECT p.name AS partner_name, p.contact AS partner_contact
+    	-> FROM db__income d
+    	-> JOIN db__partners p ON d.partner = p.id
+    	-> WHERE YEAR(d.created) < 2022
+    	->   AND d.project LIKE '% server'
+    	->   AND d.project NOT LIKE '% observer';
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+10, minden partnert csak egyszer lássunk, de legyen mellette, hány ilyen projekt kapcsolódik hozzá
+	SELECT p.name AS partner_name, COUNT(*) AS num_projects
+    	-> FROM db__income d
+    	-> JOIN db__partners p ON d.partner = p.id
+    	-> WHERE YEAR(d.created) < 2022
+    	-> AND d.project LIKE '% server'
+    	-> AND d.project NOT LIKE '% observer'
+    	-> GROUP BY p.name;
+
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+11, a rekordokat rendezzünk ezem darabszám szerint csökkenő sorrendbe (legelső az legyen, akinél a legtöbb szerver vár karbantartásra)
+	SELECT p.name AS partner_name, COUNT(*) AS num_projects
+    	-> FROM db__income d
+    	-> JOIN db__partners p ON d.partner = p.id
+    	-> WHERE YEAR(d.created) < 2022
+    	-> AND d.project LIKE '% server'
+    	-> AND d.project NOT LIKE '% observer'
+    	-> GROUP BY p.name
+   	-> ORDER BY num_projects DESC;
