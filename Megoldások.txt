@@ -3,7 +3,7 @@
    	-> WHERE partner = 25
     	-> ORDER BY created
     	-> DESC LIMIT 3;
-=== VAGY === 
+	=== VAGY === 
 	SELECT project FROM db__income
    	-> WHERE partner = 25
     	-> ORDER BY created
